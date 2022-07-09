@@ -5,13 +5,13 @@
 Summary:	EBU R 128 standard for loudness normalisation
 Summary(pl.UTF-8):	Standard normalizacji głośności EBU R 128
 Name:		libebur128
-Version:	1.2.4
+Version:	1.2.6
 Release:	1
 License:	MIT
 Group:		Libraries
+#Source0Download: https://github.com/jiixyj/libebur128/releases
 Source0:	https://github.com/jiixyj/libebur128/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	d6131f7e3bbf0cd7301fb5d9f8a30cc1
-#Patch0:	%{name}-what.patch
+# Source0-md5:	d38c5f86f5dccb37b5818b853ad49f32
 URL:		https://github.com/jiixyj/libebur128
 BuildRequires:	cmake >= 2.8.12
 BuildRequires:	rpmbuild(macros) >= 1.605
@@ -53,17 +53,33 @@ Statyczna biblioteka ebur128.
 %setup -q
 
 %build
+%if %{with static_libs}
+install -d build-static
+cd build-static
+%cmake .. \
+	-DBUILD_SHARED_LIBS=OFF \
+	-DCMAKE_INSTALL_LIBDIR=%{_lib}
+
+%{__make}
+cd ..
+%endif
+
 install -d build
 cd build
 # .pc file expects relative CMAKE_INSTALL_LIBDIR
 %cmake .. \
-	%{!?with_static_libs:-DBUILD_STATIC_LIBS=OFF} \
+	-DBUILD_STATIC_LIBS=OFF \
 	-DCMAKE_INSTALL_LIBDIR=%{_lib}
 
 %{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
+
+%if %{with static_libs}
+%{__make} -C build-static install \
+	DESTDIR=$RPM_BUILD_ROOT
+%endif
 
 %{__make} -C build install \
 	DESTDIR=$RPM_BUILD_ROOT
